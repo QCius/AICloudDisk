@@ -8,7 +8,7 @@
 >
 > 如果你对后端代码作了修改，请更新版本号并补充README文档以及项目设计文档
 >
-> [项目设计文档]: 【腾讯文档】项目设计文档
+> [项目设计文档]: https://docs.qq.com/doc/DWENkYmJudmpzTHR1?scene=665ee40978d603bf2a0ba7bbwd6Ss1
 
 ## 一、项目启动
 
