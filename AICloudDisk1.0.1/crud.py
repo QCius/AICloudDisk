@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from . import models, schemas
 
+# 对用户的增删改查
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -45,6 +46,7 @@ def create_user_item(db: Session, item: schemas.ItemCreate, user_id: int):
     db.refresh(db_item)
     return db_item
 
+# 对网盘文件的操作
 
 def create_file(db: Session, file: schemas.FileCreate, content: bytes, user_id: int):
     db_file = models.File(**file.dict(), content=content, owner_id=user_id)
@@ -54,16 +56,16 @@ def create_file(db: Session, file: schemas.FileCreate, content: bytes, user_id: 
     return db_file
 
 
-def get_files(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.File).offset(skip).limit(limit).all()
+def get_files(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.File).filter(models.File.owner_id == user_id).offset(skip).limit(limit).all()
 
 
-def get_file(db: Session, file_id: int):
-    return db.query(models.File).filter(models.File.id == file_id).first()
+def get_file(db: Session, user_id: int, file_id: int):
+    return db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == user_id).first()
 
 
-def delete_file(db: Session, file_id: int):
-    db_file = db.query(models.File).filter(models.File.id == file_id).first()
+def delete_file(db: Session, user_id: int, file_id: int):
+    db_file = db.query(models.File).filter(models.File.id == file_id, models.File.owner_id == user_id).first()
     if db_file:
         db.delete(db_file)
         db.commit()

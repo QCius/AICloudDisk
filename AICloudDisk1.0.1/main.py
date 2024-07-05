@@ -14,7 +14,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="网盘助手",
     description="This is a custom API for managing Cloud service.",
-    version="1.0.0",
+    version="1.0.1",
     
 )
 
@@ -117,8 +117,8 @@ async def create_upload_file(file: UploadFile = File(...), current_user: models.
 
 
 @app.get("/downloadfile/{file_id}", summary="下载文件", tags=["网盘管理"])
-async def download_file(file_id: int, db: Session = Depends(get_db)):
-    db_file = crud.get_file(db, file_id)
+async def download_file(file_id: int, current_user: models.User = Depends(get_current_active_user),db: Session = Depends(get_db)):
+    db_file = crud.get_file(db,current_user.id,file_id)
     if db_file is None:
         raise HTTPException(status_code=404, detail="File not found")
     
@@ -127,14 +127,14 @@ async def download_file(file_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/uploadfile/list", response_model=List[schemas.File], summary="列出文件", tags=["网盘管理"])
-async def list_files(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    files = crud.get_files(db, skip=skip, limit=limit)
+async def list_files(skip: int = 0, limit: int = 100, db: Session = Depends(get_db),current_user: models.User = Depends(get_current_active_user)):
+    files = crud.get_files(db, skip=skip, limit=limit,user_id=current_user.id)
     return files
 
 
 @app.delete("/uploadfile/delete/{file_id}", summary="删除文件", tags=["网盘管理"])
-async def delete_file(file_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_file(db, file_id)
+async def delete_file(file_id: int, db: Session = Depends(get_db),current_user: models.User = Depends(get_current_active_user)):
+    success = crud.delete_file(db, current_user.id,file_id)
     if not success:
         raise HTTPException(status_code=404, detail="File not found")
     return {"message": "File deleted successfully"}
