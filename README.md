@@ -10,6 +10,10 @@
 >
 > [项目设计文档](https://docs.qq.com/doc/DWENkYmJudmpzTHR1?scene=665ee40978d603bf2a0ba7bbwd6Ss1)
 
+下面的链接是版本1.0.1的后端API（已部署公网，直接打开即可）
+
+[后端API](http://115.29.186.14:8000/docs)
+
 ## 一、项目启动
 
 **使用清华镜像安装 fastapi依赖 及  uvicorn 标准启动器**
