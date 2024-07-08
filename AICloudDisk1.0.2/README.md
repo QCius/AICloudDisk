@@ -10,6 +10,6 @@
 ## 安装数据库依赖 sqlalchemy
 `pip install -i https://pypi.tuna.tsinghua.edu.cn/simple sqlalchemy`
 ## 启动命令
-`uvicorn sql_app.main:app --reload --port 8000`
+`uvicorn AICloudDisk.main:app --reload --port 8000`
 ## 查看文档访问地址
 `http://127.0.0.1:8000/docs`
