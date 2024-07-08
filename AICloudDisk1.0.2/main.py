@@ -5,6 +5,8 @@ from io import BytesIO
 from sqlalchemy.orm import Session
 from typing import List
 import base64
+from openai import OpenAI
+from pathlib import Path
 
 from . import crud, models, schemas
 from .database import SessionLocal, engine
@@ -44,8 +46,9 @@ async def get_current_active_user(current_user: models.User = Depends(get_curren
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
-
+# 
 # 用户管理API
+# 
 
 @app.post("/token", summary="登入", description="验证登录", tags=["用户管理"])
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -102,8 +105,9 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     items = crud.get_items(db, skip=skip, limit=limit)
     return items
 
-
+#
 # 网盘管理API
+# 
 
 @app.post("/uploadfile/", summary="上传文件", tags=["网盘管理"])
 async def create_upload_file(file: UploadFile = File(...), current_user: models.User = Depends(get_current_active_user), db: Session = Depends(get_db)):
@@ -151,18 +155,101 @@ async def delete_folder(folder_id: int):
     # 实际应用中需要实现删除文件夹的逻辑
     return {"message": "Folder deleted successfully"}
 
-# AI调用API
+#
+# AI API
+# MoonShot AI(Kimi)
+#
 
-@app.get("/AI/conclude", summary="总结文件内容", tags=["AI助手"])
-async def ai_conclude(file_id: int, db: Session = Depends(get_db)):
-    db_file = crud.get_file(db, file_id)
+client = OpenAI(
+    api_key = "sk-j6n00tElc97ogd5bn93YlpuFulTpyUOTtilKOGFxo4WhOM7C",
+    base_url = "https://api.moonshot.cn/v1",
+)
+history = [
+    {"role": "system", "content": "你是 Kimi,由 Moonshot AI 提供的人工智能助手,你更擅长中文和英文的对话。Moonshot AI 为专有名词，不可翻译成其他语言。"}
+]
+
+# 多轮对话API调用
+@app.get("/AI/chat/mul", summary="多轮对话", tags=["AI助手"])
+async def ai_chat(query,):
+    history.append({
+        "role": "user", 
+        "content": query
+    })
+    completion = client.chat.completions.create(
+        model="moonshot-v1-8k",
+        messages=history,
+        temperature=0.3,
+    )
+    result = completion.choices[0].message.content
+    history.append({
+        "role": "assistant",
+        "content": result
+    })
+    return result
+
+#  单轮对话API调用
+@app.get("/AI/chat/single", summary="单论对话", tags=["AI助手"])
+async def ai_chat(query):
+    request = [
+        {"role": "system", "content": "你是 Kimi,由 Moonshot AI 提供的人工智能助手,你更擅长中文和英文的对话。Moonshot AI 为专有名词，不可翻译成其他语言。"}
+    ]
+    request.append({
+        "role": "user", 
+        "content": query
+    })
+    completion = client.chat.completions.create(
+        model="moonshot-v1-8k",
+        messages=request,
+        temperature=0.3,
+    )
+    result = completion.choices[0].message.content
+    return result
+
+# AI文件总结
+@app.get("/AI/fileconclude", summary="总结文件内容", tags=["AI助手"])
+async def ai_file_conclude(
+    file_id: int,
+    additional_message: str = None,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    db_file = crud.get_file(db, current_user.id, file_id)
     if db_file is None:
         raise HTTPException(status_code=404, detail="File not found")
-    content = db_file.content
-    # 假设我们有一个函数 summarize_content 实现 AI 总结功能
-    summary = summarize_content(content)
-    return {"summary": summary}
-
-def summarize_content(content: bytes) -> str:
-    # 简单示例，实际应用中需要更复杂的逻辑
-    return "Summary of the content"
+    
+    # 创建文件对象
+    file_object = client.files.create(file=(db_file.filename, BytesIO(db_file.content)), purpose="file-extract")
+    
+    # 获取提取的文件内容
+    extracted_content = client.files.content(file_id=file_object.id).text
+    
+    messages = [
+        {
+            "role": "system",
+            "content": "你是 Kimi,由 Moonshot AI 提供的人工智能助手,你更擅长中文和英文的对话。你会为用户提供安全,有帮助,准确的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
+        },
+        {
+            "role": "system",
+            "content": extracted_content,
+        },
+        {   
+            "role": "user",
+            "content": "请简单介绍上传的文件的内容"
+        },
+    ]
+    
+    if additional_message:
+        messages.append({
+            "role": "user",
+            "content": additional_message,
+        })
+    
+    # 然后调用 chat-completion, 获取 Kimi 的回答
+    completion = client.chat.completions.create(
+        model="moonshot-v1-32k",
+        messages=messages,
+        temperature=0.3,
+    )
+    
+    result = completion.choices[0].message
+    return result
