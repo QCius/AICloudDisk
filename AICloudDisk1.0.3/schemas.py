@@ -1,16 +1,16 @@
 from pydantic import BaseModel
 
 
-class ItemBase(BaseModel):
-    title: str
+class FolderBase(BaseModel):
+    foldername: str
     description: str | None = None
 
 
-class ItemCreate(ItemBase):
+class FolderCreate(FolderBase):
     pass
 
 
-class Item(ItemBase):
+class Folder(FolderBase):
     id: int
     owner_id: int
 
@@ -30,7 +30,7 @@ class User(UserBase):
     id: int
     is_active: bool
     password: str
-    items: list[Item] = []
+    folders: list['Folder'] = []
     files: list['File'] = []
 
     class Config:
@@ -52,5 +52,3 @@ class File(FileBase):
     class Config:
         orm_mode = True
 
-
-User.update_forward_refs()
