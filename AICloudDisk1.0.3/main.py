@@ -1,13 +1,14 @@
 from fastapi import Depends, FastAPI, HTTPException, UploadFile, status, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse,FileResponse
 from io import BytesIO
+import wave
+import tempfile
 from sqlalchemy.orm import Session
 from typing import List
-import base64
 from openai import OpenAI
-from pathlib import Path
 
+from .AImodels import sparkAI
 from . import crud, models, schemas
 from .database import SessionLocal, engine
 
@@ -16,8 +17,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="网盘助手",
     description="This is a custom API for managing Cloud service.",
-    version="1.0.1",
-    
+    version="1.0.2",
 )
 
 # Dependency
@@ -93,17 +93,17 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.post("/users/{user_id}/items/", response_model=schemas.Item, summary="为用户创建表项", tags=["用户管理"])
-def create_item_for_user(
-    user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)
+@app.post("/users/{user_id}/folders/", response_model=schemas.Folder, summary="为用户创建文件夹", tags=["用户管理"])
+def create_folder_for_user(
+    user_id: int, folder: schemas.FolderCreate, db: Session = Depends(get_db)
 ):
-    return crud.create_user_item(db=db, item=item, user_id=user_id)
+    return crud.create_user_folder(db=db, folder=folder, user_id=user_id)
 
 
-@app.get("/items/", response_model=list[schemas.Item], summary="读取表项", tags=["用户管理"])
-def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    items = crud.get_items(db, skip=skip, limit=limit)
-    return items
+@app.get("/folders/", response_model=list[schemas.Folder], summary="读取表项", tags=["用户管理"])
+def read_folders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    folders = crud.get_folders(db, skip=skip, limit=limit)
+    return folders
 
 #
 # 网盘管理API
@@ -157,7 +157,8 @@ async def delete_folder(folder_id: int):
 
 #
 # AI API
-# MoonShot AI(Kimi)
+# MoonShot AI(Kimi) 
+# Spark AI(讯飞星火)
 #
 
 client = OpenAI(
@@ -165,33 +166,43 @@ client = OpenAI(
     base_url = "https://api.moonshot.cn/v1",
 )
 history = [
-    {"role": "system", "content": "你是 Kimi,由 Moonshot AI 提供的人工智能助手,你更擅长中文和英文的对话。Moonshot AI 为专有名词，不可翻译成其他语言。"}
+    {"role": "system", "content": "你是 网盘助手懒子哥,你更擅长中文和英文的对话。你会为用户提供安全,有帮助,准确的回答。Moonshot AI 为专有名词，不可翻译成其他语言。"}
 ]
 
 # 多轮对话API调用
 @app.get("/AI/chat/mul", summary="多轮对话", tags=["AI助手"])
-async def ai_chat(query,):
-    history.append({
-        "role": "user", 
-        "content": query
-    })
-    completion = client.chat.completions.create(
-        model="moonshot-v1-8k",
-        messages=history,
-        temperature=0.3,
-    )
-    result = completion.choices[0].message.content
-    history.append({
-        "role": "assistant",
-        "content": result
-    })
-    return result
+async def ai_chat(query,model = "spark"):
+    if model == "moonshot":
+        history.append({
+            "role": "user", 
+            "content": query
+        })
+        completion = client.chat.completions.create(
+            model="moonshot-v1-8k",
+            messages=history,
+            temperature=0.3,
+        )
+        result = completion.choices[0].message.content
+        history.append({
+            "role": "assistant",
+            "content": result
+        })
+        return result
+    
+    elif model == "spark":
+        spark = sparkAI.SparkAIModel()
+        result = spark.spark_mul_chat(query)
+        return result
+
+    else:
+        raise HTTPException(status_code=402, detail="No such model")
+
 
 #  单轮对话API调用
-@app.get("/AI/chat/single", summary="单论对话", tags=["AI助手"])
+@app.get("/AI/chat/single", summary="单轮对话", tags=["AI助手"])
 async def ai_chat(query):
     request = [
-        {"role": "system", "content": "你是 Kimi,由 Moonshot AI 提供的人工智能助手,你更擅长中文和英文的对话。Moonshot AI 为专有名词，不可翻译成其他语言。"}
+        {"role": "system", "content": "你是 网盘助手懒子哥,你更擅长中文和英文的对话。你会为用户提供安全,有帮助,准确的回答。Moonshot AI 为专有名词，不可翻译成其他语言。"}
     ]
     request.append({
         "role": "user", 
@@ -226,7 +237,7 @@ async def ai_file_conclude(
     messages = [
         {
             "role": "system",
-            "content": "你是 Kimi,由 Moonshot AI 提供的人工智能助手,你更擅长中文和英文的对话。你会为用户提供安全,有帮助,准确的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
+            "content": "你是 网盘助手懒子哥,你更擅长中文和英文的对话。你会为用户提供安全,有帮助,准确的回答。Moonshot AI 为专有名词，不可翻译成其他语言。",
         },
         {
             "role": "system",
@@ -253,3 +264,23 @@ async def ai_file_conclude(
     
     result = completion.choices[0].message
     return result
+
+#  AI语音API调用
+@app.get("/AI/voice", summary="AI文字转语音", tags=["AI助手"])
+async def ai_voice(text: str):
+    spark = sparkAI.SparkAIModel()
+    audio_data = spark.spark_AI_voice(text)
+
+    # 创建临时文件来保存音频数据
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio_file:
+        # 写入PCM数据到临时文件
+        with wave.open(temp_audio_file, 'wb') as wave_file:
+            wave_file.setnchannels(1)  # 设置单声道
+            wave_file.setsampwidth(2)  # 设置每个样本的字节数（16位）
+            wave_file.setframerate(16000)  # 设置采样率
+            wave_file.writeframes(audio_data)
+
+        temp_audio_file_path = temp_audio_file.name
+
+    # 返回生成的WAV文件
+    return FileResponse(temp_audio_file_path, media_type='audio/wav', filename='output.wav')
