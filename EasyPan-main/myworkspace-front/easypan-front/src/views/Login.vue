@@ -9,7 +9,7 @@
                 ref="formDataRef"
                 @submit.prevent
             >
-            <div class="login-title">Easy云盘</div>
+            <div class="login-title">个人在线云盘</div>
             <!-- input输入 -->
             <el-form-item prop="email" >
                 <el-input
@@ -59,7 +59,7 @@
                         <div>
                             <p>1.在垃圾箱中查找邮箱验证码</p>
                             <p>2.在邮箱中头像->设置->反垃圾->白名单->设置邮件地址白名单</p>
-                            <p>3.将邮箱【3503201604@qq.com】添加到白名单不知道怎么设置?</p>
+                            <p>3.将邮箱【1733389359@qq.com】添加到白名单不知道怎么设置?</p>
                         </div>
                         <template #reference>
                             <span class="a-link" :style="{ 'font-size': '14px' }"
@@ -159,9 +159,9 @@
                     <span v-if="opType == 2">重置密码</span>
                 </el-button>
             </el-form-item>
-            <div class="login-btn-qq" v-if="opType == 1">
+            <!-- <div class="login-btn-qq" v-if="opType == 1">
                 快捷登录<img src="@/assets/qq.png" @click="qqLogin" />
-            </div>
+            </div> -->
           </el-form>
         </div>
         <Dialog
@@ -376,7 +376,7 @@ const doSubmit = ()=> {
         } else if (opType.value == 1) {
             url = api.login;
         } else if (opType.value == 2) {
-            URL = api.resetPwd;
+            url = api.resetPwd;
         }
         let result = await proxy.Request({
             url: url,
@@ -437,7 +437,7 @@ const qqLogin = async () => {
 .login-body {
     height: calc(100vh);
     background-size: cover;
-    background: url("../assets/login_bg.jpg");
+    background: url("../assets/login_bg1.jpg");
     display: flex;
     .bg {
         flex: 1;
@@ -459,7 +459,7 @@ const qqLogin = async () => {
                 text-align: center;
                 font-size: 18px;
                 font-weight: bold;
-                color: #e704fc;
+                color: #04ebfc;
                 letter-spacing: 1px;
                 margin-bottom: 20px;
                 animation-name: glitched;
@@ -481,7 +481,7 @@ const qqLogin = async () => {
                 justify-content: space-between;
                 .send-mail-btn {
                     margin-left: 5px;
-                    background: linear-gradient(45deg, transparent 5%, #f701ff 5%);
+                    background: linear-gradient(45deg, transparent 5%, #04ebfc 5%);
                     border: 0;
                     letter-spacing: 1px;
                     line-height: 44px;
@@ -500,7 +500,7 @@ const qqLogin = async () => {
             }
             .op-btn {
                 width: 100%;
-                background: linear-gradient(45deg, transparent 5%, #f701ff 5%);
+                background: linear-gradient(45deg, transparent 5%, #04ebfc 5%);
                 border: 0;
                 color: #fff;
                 letter-spacing: 3px;
@@ -523,8 +523,8 @@ const qqLogin = async () => {
                 left: 0;
                 right: 0;
                 bottom: 0;
-                background: linear-gradient(45deg, transparent 3%, #00E6F6 3%, #00E6F6 5%, #ff0101 5%);
-                text-shadow: -3px -3px 0px #f8f405, 3px 3px 0px #00E6F6;
+                background: linear-gradient(45deg, transparent 3%, #04ebfc);
+                text-shadow: 3px 3px 0px #00E6F6;
                 clip-path: var(--slice-0);
                 }
                 button:hover::after {
@@ -552,19 +552,20 @@ const qqLogin = async () => {
         .check-code {
             margin-left: 5px;
             cursor: pointer;
+            
         }
     }
-    .login-btn-qq {
-        margin-top: 20px;
-        text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        img {
-            cursor: pointer;
-            margin-left: 10px;
-            width: 20px;
-        }
-    }
+    // .login-btn-qq {
+    //     margin-top: 20px;
+    //     text-align: center;
+    //     display: flex;
+    //     align-items: center;
+    //     justify-content: center;
+    //     img {
+    //         cursor: pointer;
+    //         margin-left: 10px;
+    //         width: 20px;
+    //     }
+    // }
 }
 </style>
