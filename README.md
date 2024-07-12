@@ -84,4 +84,5 @@ http://127.0.0.1:8000/docs
 ### 云盘JAVA版
 - 更新了后端AI对话接口、总结接口
 - AI功能前端设计还未完善
+- EasyPan-main为项目源文件，pan_java为修改后文件，请下载pan_java根据其进行修改
 
