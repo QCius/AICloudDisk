@@ -50,6 +50,24 @@ const router = createRouter({
           component: () => import("@/views/recycle/Recycle.vue")
         },
         {
+          path:'ai/fileConclusion',
+          name:'AI文档助手',
+          meta:{
+            needLogin:true,
+            menuCode:"ai"
+          },
+          component:()=>import('@/views/ai/fileConclusion.vue')
+        },
+        {
+          path:'ai/chat',
+          name:'AI聊天',
+          meta:{
+            needLogin:true,
+            menuCode:"ai"
+          },
+          component:()=>import('@/views/ai/chat.vue')
+        },
+        {
           path: '/settings/sysSetting',
           name: '系统设置',
           meta: {

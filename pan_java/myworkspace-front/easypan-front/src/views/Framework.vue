@@ -241,6 +241,25 @@ const menus = [
         ],
     },
     {
+        path:"/ai/fileConclusion",
+        icon:"ai",
+        name:"AI",
+        menuCode:"ai",
+        tips:"使用AI助手进行文件总结,对话等",
+        allShow:true,
+        children:[
+            {
+                name:"AI文档助手",
+                path:"/ai/fileConclusion",
+            },
+            {
+                name:"AI聊天",
+                path:"/ai/chat"
+            }
+            
+        ]
+    },
+    {
         path: "/settings/fileList",
         icon: "settings",
         name: "设置",

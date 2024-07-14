@@ -17,6 +17,9 @@
   content: "\e673";
 }
 
+.icon-ai:before{
+  content:"\e61f";
+}
 .icon-del:before {
   content: "\e636";
 }
