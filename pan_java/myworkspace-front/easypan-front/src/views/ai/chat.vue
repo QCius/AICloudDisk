@@ -49,7 +49,7 @@
   import Copy from "@/components/Copy.vue";
   import { md } from "@/libs/markdown";
   
-  let apiKey = "sk-CzTkhkpuVlxFp2hE80E1D2B668554e35A71d9c16D6BfFdF5";
+  let apiKey = "";
   let isConfig = ref(true);
   let isTalking = ref(false);
   let messageContent = ref("");
